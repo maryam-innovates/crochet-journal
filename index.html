@@ -5,86 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>✧ THE PERMANENT SCRAPBOOK ✧</title>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
     <style>
-        :root {
-            --bg: #0d0d0d; --accent: #bfff00; --secondary: #ff00ff;
-            --card-bg: #1a1a1a; --text: #ffffff; --font: 'VT323', monospace;
-        }
-        body.kawaii-mode {
-            --bg: #fff0f5; --accent: #ff69b4; --secondary: #87ceeb;
-            --card-bg: #ffffff; --text: #4b0082;
-        }
-        body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 20px; transition: 0.3s; overflow-x: hidden; }
-        
+        :root { --bg: #0d0d0d; --accent: #bfff00; --secondary: #ff00ff; --card-bg: #1a1a1a; --text: #ffffff; --font: 'VT323', monospace; }
+        body.kawaii-mode { --bg: #fff0f5; --accent: #ff69b4; --secondary: #87ceeb; --card-bg: #ffffff; --text: #4b0082; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 20px; transition: 0.3s; }
         #bio-header { border: 3px double var(--accent); padding: 20px; text-align: center; margin-bottom: 20px; background: var(--card-bg); }
-        #stat-box { display: inline-block; padding: 5px 15px; border: 1px dashed var(--secondary); margin: 10px 0; }
-
-        .side-nav { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; }
-        .symbol-btn { 
-            background: var(--card-bg); border: 2px solid var(--accent); color: var(--accent);
-            width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; 
-            justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 4px 4px 0 var(--secondary);
-            transition: 0.2s;
-        }
-
-        #search-container { max-width: 500px; margin: 0 auto 20px auto; }
-        #search-bar { width: 100%; padding: 10px; background: #000; border: 2px solid var(--secondary); color: var(--accent); font-family: var(--font); font-size: 1.2rem; outline: none; }
-
         #scrapbook-content { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .project-card { 
-            width: 100%; max-width: 380px; background: var(--card-bg); border: 3px solid var(--secondary); 
-            padding: 15px; position: relative; box-shadow: 10px 10px 0px var(--accent);
-        }
-        .delete-btn { position: absolute; top: 10px; right: 10px; background: #000; border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-size: 1.2rem; padding: 0 5px; }
-        
-        .media-preview { width: 100%; height: 300px; object-fit: cover; border: 1px solid var(--accent); margin-top: 10px; }
-
-        input, .btn { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 12px; margin: 5px 0; font-family: var(--font); font-size: 1.2rem; box-sizing: border-box; }
-        .btn { cursor: pointer; font-weight: bold; background: var(--accent); color: #000; border: none; }
-        
-        #upload-status { display: none; margin-top: 10px; color: var(--accent); text-align: center; font-weight: bold; }
+        .project-card { width: 100%; max-width: 380px; background: var(--card-bg); border: 3px solid var(--secondary); padding: 15px; box-shadow: 10px 10px 0px var(--accent); position: relative; }
+        .btn { width: 100%; background: var(--accent); color: #000; padding: 12px; margin: 5px 0; font-family: var(--font); font-size: 1.2rem; cursor: pointer; border: none; font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 10px; margin: 5px 0; box-sizing: border-box; font-family: var(--font); }
         .hidden { display: none; }
-
-        .nav-menu { text-align: center; font-size: 2rem; margin: 20px 0; }
-        .nav-item { cursor: pointer; transition: 0.2s; }
+        .nav-menu { text-align: center; font-size: 1.5rem; margin: 20px 0; }
+        .nav-item { cursor: pointer; margin: 0 10px; color: var(--accent); }
     </style>
 </head>
 <body>
 
     <div id="bio-header">
-        <h1 style="color:var(--secondary); font-size: 3rem; margin:0;">2026</h1>
-        <div id="stat-box">PROJECTS_LOGGED: <span id="count-num">0</span></div>
-        <p onclick="editBio()" id="bio-text">"Crocheting my way through the year..." (Tap to edit)</p>
+        <h1 style="color:var(--secondary); font-size: 3rem; margin:0;">2026 LOG</h1>
+        <div id="stat-box">PROJECTS: <span id="count-num">0</span></div>
     </div>
-
-    <button class="btn" style="width:auto; float:right;" onclick="document.body.classList.toggle('kawaii-mode')">⊹ VIBE SWITCH ⊹</button>
 
     <div class="nav-menu">
-        <span class="nav-item" onclick="showView('journal')">✦ SCRAPBOOK</span> | 
-        <span class="nav-item" onclick="showView('add')">✦ ADD_ENTRY</span>
-    </div>
-
-    <div id="search-container">
-        <input type="text" id="search-bar" placeholder="🔍 Search projects..." onkeyup="filterProjects()">
+        <span class="nav-item" onclick="showView('journal')">✦ VIEW JOURNAL</span> | 
+        <span class="nav-item" onclick="showView('add')">✦ ADD NEW</span>
     </div>
 
     <div id="add-view" class="hidden">
-        <div style="max-width:500px; margin:auto; border:3px solid var(--secondary); padding:25px; background:var(--card-bg); position:relative;">
-            <button onclick="showView('journal')" style="position:absolute; top:10px; right:10px; color:var(--accent); background:none; border:1px solid var(--accent); cursor:pointer;">[X]</button>
-            <h2 style="color:var(--accent)">> UPLOAD_MEMORY</h2>
+        <div style="max-width:500px; margin:auto; border:3px solid var(--secondary); padding:25px; background:var(--card-bg);">
+            <h2 style="color:var(--accent)">> NEW ENTRY (TEXT ONLY)</h2>
             <input type="text" id="name" placeholder="Project Name">
             <input type="text" id="hook" placeholder="Hook Size">
-            <input type="text" id="yarn" placeholder="Yarn Brand & Color">
+            <input type="text" id="yarn" placeholder="Yarn Brand">
             <input type="text" id="stitches" placeholder="Stitches Used">
             <input type="url" id="tutorial" placeholder="Tutorial Link">
-            <input type="date" id="proj-date">
-            <input type="file" id="mediaInput" multiple accept="image/*,video/*">
-            <button class="btn" id="save-btn" onclick="uploadToFirebase()">SAVE TO DATABASE 💾</button>
-            <div id="upload-status">SIGNALING SATELLITE... DO NOT CLOSE PAGE</div>
+            <button class="btn" id="save-btn" onclick="saveToFirebase()">SAVE TO DATABASE 💾</button>
         </div>
     </div>
 
@@ -92,97 +51,49 @@
         <div id="scrapbook-content"></div>
     </div>
 
-    <div class="side-nav">
-        <div class="symbol-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">✧</div>
-        <div class="symbol-btn" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})">✦</div>
-    </div>
-
     <script>
-      // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+        // YOUR NEW CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzzyFtT6viYm7h80diX1dZB5QDKihdtoE",
+            authDomain: "crochet-journal-1aaa6.firebaseapp.com",
+            projectId: "crochet-journal-1aaa6",
+            storageBucket: "crochet-journal-1aaa6.firebasestorage.app",
+            messagingSenderId: "915192079433",
+            appId: "1:915192079433:web:f7e58423837f5e3a290b98"
+        };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDzzyFtT6viYm7h80diX1dZB5QDKihdtoE",
-  authDomain: "crochet-journal-1aaa6.firebaseapp.com",
-  projectId: "crochet-journal-1aaa6",
-  storageBucket: "crochet-journal-1aaa6.firebasestorage.app",
-  messagingSenderId: "915192079433",
-  appId: "1:915192079433:web:f7e58423837f5e3a290b98",
-  measurementId: "G-XCLPGY716E"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-        
-        let allProjects = [];
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         function showView(v) {
             document.getElementById('add-view').classList.toggle('hidden', v !== 'add');
             document.getElementById('journal-view').classList.toggle('hidden', v !== 'journal');
-            document.getElementById('search-container').classList.toggle('hidden', v === 'add');
         }
 
-        async function uploadToFirebase() {
-            const files = document.getElementById('mediaInput').files;
-            if(files.length === 0) return alert("Pick files first!");
-
+        async function saveToFirebase() {
             const btn = document.getElementById('save-btn');
-            const status = document.getElementById('upload-status');
-            
+            btn.innerText = "SAVING...";
             btn.disabled = true;
-            btn.innerText = "SIGNALING...";
-            status.style.display = 'block';
 
             try {
-                const mediaLinks = [];
-                for (let file of files) {
-                    const ref = storage.ref(`2026/${Date.now()}_${file.name}`);
-                    // Using put() with task to ensure it completes
-                    const task = await ref.put(file);
-                    const url = await task.ref.getDownloadURL();
-                    mediaLinks.push({ url, type: file.type });
-                }
-
                 await db.collection("projects").add({
-                    name: document.getElementById('name').value || "Project",
-                    hook: document.getElementById('hook').value || "",
-                    yarn: document.getElementById('yarn').value || "",
-                    stitches: document.getElementById('stitches').value || "",
+                    name: document.getElementById('name').value || "Unnamed Project",
+                    hook: document.getElementById('hook').value || "N/A",
+                    yarn: document.getElementById('yarn').value || "N/A",
+                    stitches: document.getElementById('stitches').value || "N/A",
                     tutorial: document.getElementById('tutorial').value || "",
-                    date: document.getElementById('proj-date').value || new Date().toISOString(),
-                    media: mediaLinks
+                    date: new Date().toISOString()
                 });
 
-                // THE POPUP YOU ASKED FOR
-                alert("✦ SUCCESS: MEMORY SAVED TO THE SATELLITE ✦");
-                location.reload();
-            } catch (e) { 
-                console.error(e);
-                alert("CRITICAL ERROR: Connection to Satellite lost. Check file size!"); 
-                btn.disabled = false; 
-                status.style.display = 'none'; 
+                alert("✦ SUCCESS: MEMORY SAVED ✦");
+                showView('journal');
                 btn.innerText = "SAVE TO DATABASE 💾";
-            }
-        }
-
-        function filterProjects() {
-            const term = document.getElementById('search-bar').value.toLowerCase();
-            const cards = document.getElementsByClassName('project-card');
-            Array.from(cards).forEach(card => {
-                const text = card.innerText.toLowerCase();
-                card.style.display = text.includes(term) ? "block" : "none";
-            });
-        }
-
-        async function deleteProject(id) {
-            if(confirm("Permanently delete this memory?")) {
-                await db.collection("projects").doc(id).delete();
+                btn.disabled = false;
+            } catch (e) {
+                console.error(e);
+                alert("ERROR: Could not connect to Database. Did you set Rules to TRUE?");
+                btn.disabled = false;
             }
         }
 
@@ -193,18 +104,11 @@ const analytics = getAnalytics(app);
                 document.getElementById('count-num').innerText = snap.size;
                 snap.forEach(doc => {
                     const p = doc.data();
-                    const media = p.media && p.media.length > 0 ? p.media[0] : null;
-                    const mediaTag = media && media.type.includes('video') 
-                        ? `<video src="${media.url}" class="media-preview" controls></video>` 
-                        : `<img src="${media ? media.url : ''}" class="media-preview">`;
-
                     cont.innerHTML += `
                         <div class="project-card">
-                            <button class="delete-btn" onclick="deleteProject('${doc.id}')">✖</button>
-                            ${mediaTag}
-                            <h2 style="color:var(--accent); margin:10px 0;">${p.name}</h2>
+                            <h2 style="color:var(--accent);">${p.name}</h2>
                             <p><b>HOOK:</b> ${p.hook} | <b>YARN:</b> ${p.yarn}</p>
-                            <p><b>DATE:</b> ${new Date(p.date).toLocaleDateString()}</p>
+                            <p><b>STITCHES:</b> ${p.stitches}</p>
                             ${p.tutorial ? `<a href="${p.tutorial}" target="_blank" style="color:var(--secondary)">[SOURCE_LINK]</a>` : ''}
                         </div>`;
                 });
