@@ -12,47 +12,88 @@
     <style>
         :root { --bg: #0d0d0d; --accent: #bfff00; --secondary: #ff00ff; --card-bg: #1a1a1a; --text: #ffffff; --font: 'VT323', monospace; }
         body.kawaii-mode { --bg: #fff0f5; --accent: #ff69b4; --secondary: #87ceeb; --card-bg: #ffffff; --text: #4b0082; }
-        body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 20px; transition: 0.3s; }
+        
+        body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 20px; transition: 0.3s; overflow-x: hidden; }
+        
         #bio-header { border: 3px double var(--accent); padding: 20px; text-align: center; margin-bottom: 20px; background: var(--card-bg); }
-        #scrapbook-content { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .project-card { width: 100%; max-width: 380px; background: var(--card-bg); border: 3px solid var(--secondary); padding: 15px; box-shadow: 10px 10px 0px var(--accent); position: relative; }
-        .btn { width: 100%; background: var(--accent); color: #000; padding: 12px; margin: 5px 0; font-family: var(--font); font-size: 1.2rem; cursor: pointer; border: none; font-weight: bold; }
-        input { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 10px; margin: 5px 0; box-sizing: border-box; font-family: var(--font); }
-        .hidden { display: none; }
+        
+        /* Navigation & Buttons */
         .nav-menu { text-align: center; font-size: 1.5rem; margin: 20px 0; }
-        .nav-item { cursor: pointer; margin: 0 10px; color: var(--accent); }
+        .nav-item { cursor: pointer; margin: 0 10px; color: var(--accent); text-decoration: underline; }
+        
+        .vibe-btn { width: auto; padding: 5px 15px; background: var(--secondary); color: #000; border: none; font-family: var(--font); cursor: pointer; margin-bottom: 10px; float: right; }
+
+        /* Scroll Buttons */
+        .side-nav { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+        .symbol-btn { 
+            background: var(--card-bg); border: 2px solid var(--accent); color: var(--accent);
+            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; 
+            justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 3px 3px 0 var(--secondary);
+        }
+
+        /* Entry Form */
+        #add-view { max-width: 500px; margin: auto; border: 3px solid var(--secondary); padding: 25px; background: var(--card-bg); position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 10px; color: var(--accent); background: none; border: 1px solid var(--accent); cursor: pointer; }
+        
+        input { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 12px; margin: 12px 0; box-sizing: border-box; font-family: var(--font); font-size: 1.1rem; }
+        .save-btn { width: 100%; background: var(--accent); color: #000; padding: 15px; margin-top: 10px; font-family: var(--font); font-size: 1.3rem; cursor: pointer; border: none; font-weight: bold; }
+
+        /* Project Cards */
+        #scrapbook-content { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .project-card { width: 100%; max-width: 350px; background: var(--card-bg); border: 3px solid var(--secondary); padding: 15px; box-shadow: 8px 8px 0px var(--accent); position: relative; margin-bottom: 15px; }
+        .delete-btn { position: absolute; top: 10px; right: 10px; color: red; background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+
+        /* Custom Retro Popup */
+        #custom-popup { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--card-bg); border: 4px solid var(--accent); padding: 30px; 
+            z-index: 2000; text-align: center; box-shadow: 20px 20px 0 var(--secondary);
+        }
+
+        .hidden { display: none; }
     </style>
 </head>
-<body>
+<body id="main-body">
+
+    <button class="vibe-btn" onclick="document.body.classList.toggle('kawaii-mode')">⊹ SWITCH VIBE ⊹</button>
 
     <div id="bio-header">
         <h1 style="color:var(--secondary); font-size: 3rem; margin:0;">2026 LOG</h1>
-        <div id="stat-box">PROJECTS: <span id="count-num">0</span></div>
+        <div id="stat-box" style="border: 1px dashed var(--secondary); display: inline-block; padding: 5px 10px;">PROJECTS: <span id="count-num">0</span></div>
     </div>
 
     <div class="nav-menu">
         <span class="nav-item" onclick="showView('journal')">✦ VIEW JOURNAL</span> | 
-        <span class="nav-item" onclick="showView('add')">✦ ADD NEW</span>
+        <span class="nav-item" onclick="showView('add')">✦ ADD NEW ENTRY</span>
     </div>
 
     <div id="add-view" class="hidden">
-        <div style="max-width:500px; margin:auto; border:3px solid var(--secondary); padding:25px; background:var(--card-bg);">
-            <h2 style="color:var(--accent)">> NEW ENTRY (TEXT ONLY)</h2>
-            <input type="text" id="name" placeholder="Project Name">
-            <input type="text" id="hook" placeholder="Hook Size">
-            <input type="text" id="yarn" placeholder="Yarn Brand">
-            <input type="text" id="stitches" placeholder="Stitches Used">
-            <input type="url" id="tutorial" placeholder="Tutorial Link">
-            <button class="btn" id="save-btn" onclick="saveToFirebase()">SAVE TO DATABASE 💾</button>
-        </div>
+        <button class="close-btn" onclick="showView('journal')">[X]</button>
+        <h2 style="color:var(--accent)">> UPLOAD_MEMORY</h2>
+        <input type="text" id="name" placeholder="Project Name">
+        <input type="text" id="hook" placeholder="Hook Size (e.g. 5mm)">
+        <input type="text" id="yarn" placeholder="Yarn Brand & Color">
+        <input type="text" id="stitches" placeholder="Stitches Used">
+        <input type="url" id="tutorial" placeholder="Tutorial Link (YouTube)">
+        <button class="save-btn" id="save-btn" onclick="saveToFirebase()">SAVE TO DATABASE 💾</button>
     </div>
 
     <div id="journal-view">
         <div id="scrapbook-content"></div>
     </div>
 
+    <div class="side-nav">
+        <div class="symbol-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">▲</div>
+        <div class="symbol-btn" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})">▼</div>
+    </div>
+
+    <div id="custom-popup">
+        <h2 style="color:var(--accent)">✦ SUCCESS ✦</h2>
+        <p>MEMORY SAVED TO SATELLITE</p>
+        <button class="save-btn" onclick="closePopup()">OK</button>
+    </div>
+
     <script>
-        // YOUR NEW CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDzzyFtT6viYm7h80diX1dZB5QDKihdtoE",
             authDomain: "crochet-journal-1aaa6.firebaseapp.com",
@@ -62,7 +103,6 @@
             appId: "1:915192079433:web:f7e58423837f5e3a290b98"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -73,7 +113,7 @@
 
         async function saveToFirebase() {
             const btn = document.getElementById('save-btn');
-            btn.innerText = "SAVING...";
+            btn.innerText = "SIGNALING...";
             btn.disabled = true;
 
             try {
@@ -86,14 +126,30 @@
                     date: new Date().toISOString()
                 });
 
-                alert("✦ SUCCESS: MEMORY SAVED ✦");
-                showView('journal');
+                document.getElementById('custom-popup').style.display = 'block';
                 btn.innerText = "SAVE TO DATABASE 💾";
                 btn.disabled = false;
+                
+                // Clear inputs
+                document.getElementById('name').value = '';
+                document.getElementById('hook').value = '';
+                document.getElementById('yarn').value = '';
+                document.getElementById('stitches').value = '';
+                document.getElementById('tutorial').value = '';
             } catch (e) {
-                console.error(e);
-                alert("ERROR: Could not connect to Database. Did you set Rules to TRUE?");
+                alert("ERROR: Check your internet or Firebase Rules!");
                 btn.disabled = false;
+            }
+        }
+
+        function closePopup() {
+            document.getElementById('custom-popup').style.display = 'none';
+            showView('journal');
+        }
+
+        async function deleteProject(id) {
+            if(confirm("Permanently delete this memory?")) {
+                await db.collection("projects").doc(id).delete();
             }
         }
 
@@ -106,10 +162,12 @@
                     const p = doc.data();
                     cont.innerHTML += `
                         <div class="project-card">
-                            <h2 style="color:var(--accent);">${p.name}</h2>
-                            <p><b>HOOK:</b> ${p.hook} | <b>YARN:</b> ${p.yarn}</p>
+                            <button class="delete-btn" onclick="deleteProject('${doc.id}')">✖</button>
+                            <h2 style="color:var(--accent); margin-top:0;">${p.name}</h2>
+                            <p><b>HOOK:</b> ${p.hook}</p>
+                            <p><b>YARN:</b> ${p.yarn}</p>
                             <p><b>STITCHES:</b> ${p.stitches}</p>
-                            ${p.tutorial ? `<a href="${p.tutorial}" target="_blank" style="color:var(--secondary)">[SOURCE_LINK]</a>` : ''}
+                            ${p.tutorial ? `<a href="${p.tutorial}" target="_blank" style="color:var(--secondary)">[VIEW_TUTORIAL]</a>` : ''}
                         </div>`;
                 });
             });
