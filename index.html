@@ -14,10 +14,8 @@
         body.kawaii-mode { --bg: #fff0f5; --accent: #ff69b4; --secondary: #87ceeb; --card-bg: #ffffff; --text: #4b0082; }
         
         body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 20px; transition: 0.3s; overflow-x: hidden; }
-        
         #bio-header { border: 3px double var(--accent); padding: 20px; text-align: center; margin-bottom: 20px; background: var(--card-bg); }
         
-        /* Navigation & Buttons */
         .nav-menu { text-align: center; font-size: 1.5rem; margin: 20px 0; }
         .nav-item { cursor: pointer; margin: 0 10px; color: var(--accent); text-decoration: underline; }
         
@@ -35,13 +33,14 @@
         #add-view { max-width: 500px; margin: auto; border: 3px solid var(--secondary); padding: 25px; background: var(--card-bg); position: relative; }
         .close-btn { position: absolute; top: 10px; right: 10px; color: var(--accent); background: none; border: 1px solid var(--accent); cursor: pointer; }
         
-        input { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 12px; margin: 12px 0; box-sizing: border-box; font-family: var(--font); font-size: 1.1rem; }
+        input { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 12px; margin: 10px 0; box-sizing: border-box; font-family: var(--font); font-size: 1.1rem; }
         .save-btn { width: 100%; background: var(--accent); color: #000; padding: 15px; margin-top: 10px; font-family: var(--font); font-size: 1.3rem; cursor: pointer; border: none; font-weight: bold; }
 
         /* Project Cards */
         #scrapbook-content { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
         .project-card { width: 100%; max-width: 350px; background: var(--card-bg); border: 3px solid var(--secondary); padding: 15px; box-shadow: 8px 8px 0px var(--accent); position: relative; margin-bottom: 15px; }
         .delete-btn { position: absolute; top: 10px; right: 10px; color: red; background: none; border: none; cursor: pointer; font-size: 1.2rem; }
+        .card-img { width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--secondary); margin-bottom: 10px; display: block; }
 
         /* Custom Retro Popup */
         #custom-popup { 
@@ -53,7 +52,7 @@
         .hidden { display: none; }
     </style>
 </head>
-<body id="main-body">
+<body>
 
     <button class="vibe-btn" onclick="document.body.classList.toggle('kawaii-mode')">⊹ SWITCH VIBE ⊹</button>
 
@@ -71,10 +70,11 @@
         <button class="close-btn" onclick="showView('journal')">[X]</button>
         <h2 style="color:var(--accent)">> UPLOAD_MEMORY</h2>
         <input type="text" id="name" placeholder="Project Name">
-        <input type="text" id="hook" placeholder="Hook Size (e.g. 5mm)">
-        <input type="text" id="yarn" placeholder="Yarn Brand & Color">
+        <input type="text" id="imgUrl" placeholder="Photo Link (Paste URL here)">
+        <input type="text" id="hook" placeholder="Hook Size">
+        <input type="text" id="yarn" placeholder="Yarn Brand">
         <input type="text" id="stitches" placeholder="Stitches Used">
-        <input type="url" id="tutorial" placeholder="Tutorial Link (YouTube)">
+        <input type="url" id="tutorial" placeholder="Tutorial Link">
         <button class="save-btn" id="save-btn" onclick="saveToFirebase()">SAVE TO DATABASE 💾</button>
     </div>
 
@@ -119,6 +119,7 @@
             try {
                 await db.collection("projects").add({
                     name: document.getElementById('name').value || "Unnamed Project",
+                    img: document.getElementById('imgUrl').value || "",
                     hook: document.getElementById('hook').value || "N/A",
                     yarn: document.getElementById('yarn').value || "N/A",
                     stitches: document.getElementById('stitches').value || "N/A",
@@ -130,14 +131,10 @@
                 btn.innerText = "SAVE TO DATABASE 💾";
                 btn.disabled = false;
                 
-                // Clear inputs
-                document.getElementById('name').value = '';
-                document.getElementById('hook').value = '';
-                document.getElementById('yarn').value = '';
-                document.getElementById('stitches').value = '';
-                document.getElementById('tutorial').value = '';
+                // Clear fields
+                ['name', 'imgUrl', 'hook', 'yarn', 'stitches', 'tutorial'].forEach(id => document.getElementById(id).value = '');
             } catch (e) {
-                alert("ERROR: Check your internet or Firebase Rules!");
+                alert("ERROR: Connection Lost!");
                 btn.disabled = false;
             }
         }
@@ -163,6 +160,7 @@
                     cont.innerHTML += `
                         <div class="project-card">
                             <button class="delete-btn" onclick="deleteProject('${doc.id}')">✖</button>
+                            ${p.img ? `<img src="${p.img}" class="card-img" onerror="this.style.display='none'">` : ''}
                             <h2 style="color:var(--accent); margin-top:0;">${p.name}</h2>
                             <p><b>HOOK:</b> ${p.hook}</p>
                             <p><b>YARN:</b> ${p.yarn}</p>
