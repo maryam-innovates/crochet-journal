@@ -20,11 +20,9 @@
         }
         body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 20px; transition: 0.3s; overflow-x: hidden; }
         
-        /* Layout Elements */
         #bio-header { border: 3px double var(--accent); padding: 20px; text-align: center; margin-bottom: 20px; background: var(--card-bg); }
         #stat-box { display: inline-block; padding: 5px 15px; border: 1px dashed var(--secondary); margin: 10px 0; }
 
-        /* Navigation Symbols */
         .side-nav { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; }
         .symbol-btn { 
             background: var(--card-bg); border: 2px solid var(--accent); color: var(--accent);
@@ -32,35 +30,27 @@
             justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 4px 4px 0 var(--secondary);
             transition: 0.2s;
         }
-        .symbol-btn:hover { transform: scale(1.1); background: var(--accent); color: #000; }
 
-        /* Search Bar Style */
         #search-container { max-width: 500px; margin: 0 auto 20px auto; }
         #search-bar { width: 100%; padding: 10px; background: #000; border: 2px solid var(--secondary); color: var(--accent); font-family: var(--font); font-size: 1.2rem; outline: none; }
 
-        /* Card Elements */
         #scrapbook-content { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
         .project-card { 
             width: 100%; max-width: 380px; background: var(--card-bg); border: 3px solid var(--secondary); 
             padding: 15px; position: relative; box-shadow: 10px 10px 0px var(--accent);
         }
         .delete-btn { position: absolute; top: 10px; right: 10px; background: #000; border: 1px solid var(--secondary); color: var(--secondary); cursor: pointer; font-size: 1.2rem; padding: 0 5px; }
-        .delete-btn:hover { background: var(--secondary); color: #000; }
         
         .media-preview { width: 100%; height: 300px; object-fit: cover; border: 1px solid var(--accent); margin-top: 10px; }
 
-        /* Inputs & Buttons from Screen */
         input, .btn { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 12px; margin: 5px 0; font-family: var(--font); font-size: 1.2rem; box-sizing: border-box; }
         .btn { cursor: pointer; font-weight: bold; background: var(--accent); color: #000; border: none; }
-        .btn:active { opacity: 0.8; }
         
-        #upload-status { display: none; margin-top: 10px; color: var(--accent); text-align: center; animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
+        #upload-status { display: none; margin-top: 10px; color: var(--accent); text-align: center; font-weight: bold; }
         .hidden { display: none; }
 
         .nav-menu { text-align: center; font-size: 2rem; margin: 20px 0; }
         .nav-item { cursor: pointer; transition: 0.2s; }
-        .nav-item:hover { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
     </style>
 </head>
 <body>
@@ -79,7 +69,7 @@
     </div>
 
     <div id="search-container">
-        <input type="text" id="search-bar" placeholder="🔍 Search by project name or yarn..." onkeyup="filterProjects()">
+        <input type="text" id="search-bar" placeholder="🔍 Search projects..." onkeyup="filterProjects()">
     </div>
 
     <div id="add-view" class="hidden">
@@ -90,11 +80,11 @@
             <input type="text" id="hook" placeholder="Hook Size">
             <input type="text" id="yarn" placeholder="Yarn Brand & Color">
             <input type="text" id="stitches" placeholder="Stitches Used">
-            <input type="url" id="tutorial" placeholder="Tutorial Link (https://...)">
+            <input type="url" id="tutorial" placeholder="Tutorial Link">
             <input type="date" id="proj-date">
             <input type="file" id="mediaInput" multiple accept="image/*,video/*">
             <button class="btn" id="save-btn" onclick="uploadToFirebase()">SAVE TO DATABASE 💾</button>
-            <div id="upload-status">UPLOADING TO DATABASE...</div>
+            <div id="upload-status">SIGNALING SATELLITE... DO NOT CLOSE PAGE</div>
         </div>
     </div>
 
@@ -108,7 +98,6 @@
     </div>
 
     <script>
-        // Your Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyDPbpS_DrMA_iMNQAPVBtIpleGlfBY77eQ",
             authDomain: "crochet-journal-12ef5.firebaseapp.com",
@@ -130,41 +119,56 @@
             document.getElementById('search-container').classList.toggle('hidden', v === 'add');
         }
 
-        function editBio() {
-            const b = prompt("Update bio:", document.getElementById('bio-text').innerText);
-            if(b) { document.getElementById('bio-text').innerText = b; localStorage.setItem('cr_bio', b); }
-        }
-
         async function uploadToFirebase() {
             const files = document.getElementById('mediaInput').files;
-            if(files.length === 0) return alert("Select files!");
+            if(files.length === 0) return alert("Pick files first!");
 
             const btn = document.getElementById('save-btn');
             const status = document.getElementById('upload-status');
+            
             btn.disabled = true;
+            btn.innerText = "SIGNALING...";
             status.style.display = 'block';
 
             try {
                 const mediaLinks = [];
                 for (let file of files) {
                     const ref = storage.ref(`2026/${Date.now()}_${file.name}`);
-                    await ref.put(file);
-                    const url = await ref.getDownloadURL();
+                    // Using put() with task to ensure it completes
+                    const task = await ref.put(file);
+                    const url = await task.ref.getDownloadURL();
                     mediaLinks.push({ url, type: file.type });
                 }
 
                 await db.collection("projects").add({
                     name: document.getElementById('name').value || "Project",
-                    hook: document.getElementById('hook').value,
-                    yarn: document.getElementById('yarn').value,
-                    stitches: document.getElementById('stitches').value,
-                    tutorial: document.getElementById('tutorial').value,
+                    hook: document.getElementById('hook').value || "",
+                    yarn: document.getElementById('yarn').value || "",
+                    stitches: document.getElementById('stitches').value || "",
+                    tutorial: document.getElementById('tutorial').value || "",
                     date: document.getElementById('proj-date').value || new Date().toISOString(),
-                    media: mediaLinks,
-                    searchKey: (document.getElementById('name').value + " " + document.getElementById('yarn').value).toLowerCase()
+                    media: mediaLinks
                 });
+
+                // THE POPUP YOU ASKED FOR
+                alert("✦ SUCCESS: MEMORY SAVED TO THE SATELLITE ✦");
                 location.reload();
-            } catch (e) { alert("Error uploading!"); btn.disabled = false; status.style.display = 'none'; }
+            } catch (e) { 
+                console.error(e);
+                alert("CRITICAL ERROR: Connection to Satellite lost. Check file size!"); 
+                btn.disabled = false; 
+                status.style.display = 'none'; 
+                btn.innerText = "SAVE TO DATABASE 💾";
+            }
+        }
+
+        function filterProjects() {
+            const term = document.getElementById('search-bar').value.toLowerCase();
+            const cards = document.getElementsByClassName('project-card');
+            Array.from(cards).forEach(card => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(term) ? "block" : "none";
+            });
         }
 
         async function deleteProject(id) {
@@ -173,45 +177,28 @@
             }
         }
 
-        function filterProjects() {
-            const term = document.getElementById('search-bar').value.toLowerCase();
-            const filtered = allProjects.filter(p => 
-                p.name.toLowerCase().includes(term) || 
-                p.yarn.toLowerCase().includes(term)
-            );
-            renderCards(filtered);
-        }
-
-        function renderCards(projects) {
-            const cont = document.getElementById('scrapbook-content');
-            cont.innerHTML = '';
-            projects.forEach(p => {
-                const mediaHtml = p.media[0].type.includes('video') 
-                    ? `<video src="${p.media[0].url}" class="media-preview" controls></video>` 
-                    : `<img src="${p.media[0].url}" class="media-preview">`;
-
-                cont.innerHTML += `
-                    <div class="project-card">
-                        <button class="delete-btn" onclick="deleteProject('${p.id}')">✖</button>
-                        ${mediaHtml}
-                        <h2 style="color:var(--accent); margin: 10px 0 5px 0;">${p.name}</h2>
-                        <p><b>HOOK:</b> ${p.hook} | <b>YARN:</b> ${p.yarn}</p>
-                        <p><b>DATE:</b> ${new Date(p.date).toLocaleDateString()}</p>
-                        <a href="${p.tutorial}" target="_blank" style="color:var(--secondary)">[TUTORIAL_SOURCE]</a>
-                    </div>
-                `;
-            });
-        }
-
         function loadData() {
-            const savedBio = localStorage.getItem('cr_bio');
-            if(savedBio) document.getElementById('bio-text').innerText = savedBio;
-
             db.collection("projects").orderBy("date", "desc").onSnapshot(snap => {
-                allProjects = [];
-                snap.forEach(doc => allProjects.push({ id: doc.id, ...doc.data() }));
-                document.getElementById('count-num').innerText = allProjects.length;
-                renderCards(allProjects);
+                const cont = document.getElementById('scrapbook-content');
+                cont.innerHTML = '';
+                document.getElementById('count-num').innerText = snap.size;
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    const media = p.media && p.media.length > 0 ? p.media[0] : null;
+                    const mediaTag = media && media.type.includes('video') 
+                        ? `<video src="${media.url}" class="media-preview" controls></video>` 
+                        : `<img src="${media ? media.url : ''}" class="media-preview">`;
+
+                    cont.innerHTML += `
+                        <div class="project-card">
+                            <button class="delete-btn" onclick="deleteProject('${doc.id}')">✖</button>
+                            ${mediaTag}
+                            <h2 style="color:var(--accent); margin:10px 0;">${p.name}</h2>
+                            <p><b>HOOK:</b> ${p.hook} | <b>YARN:</b> ${p.yarn}</p>
+                            <p><b>DATE:</b> ${new Date(p.date).toLocaleDateString()}</p>
+                            ${p.tutorial ? `<a href="${p.tutorial}" target="_blank" style="color:var(--secondary)">[SOURCE_LINK]</a>` : ''}
+                        </div>`;
+                });
             });
         }
         loadData();
