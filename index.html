@@ -98,19 +98,28 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDPbpS_DrMA_iMNQAPVBtIpleGlfBY77eQ",
-            authDomain: "crochet-journal-12ef5.firebaseapp.com",
-            projectId: "crochet-journal-12ef5",
-            storageBucket: "crochet-journal-12ef5.firebasestorage.app",
-            messagingSenderId: "547985781877",
-            appId: "1:547985781877:web:282850f0501f7eab18f43c"
-        };
+      // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDzzyFtT6viYm7h80diX1dZB5QDKihdtoE",
+  authDomain: "crochet-journal-1aaa6.firebaseapp.com",
+  projectId: "crochet-journal-1aaa6",
+  storageBucket: "crochet-journal-1aaa6.firebasestorage.app",
+  messagingSenderId: "915192079433",
+  appId: "1:915192079433:web:f7e58423837f5e3a290b98",
+  measurementId: "G-XCLPGY716E"
+};
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+        
         let allProjects = [];
 
         function showView(v) {
