@@ -10,43 +10,99 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --bg: #0d0d0d; --accent: #bfff00; --secondary: #ff00ff; --card-bg: #1a1a1a; --text: #ffffff; --font: 'VT323', monospace; }
-        body.kawaii-mode { --bg: #fff0f5; --accent: #ff69b4; --secondary: #87ceeb; --card-bg: #ffffff; --text: #4b0082; }
+        :root { 
+            --bg: #0d0d0d; --accent: #bfff00; --secondary: #ff00ff; --card-bg: #1a1a1a; --text: #ffffff; 
+            --font: 'VT323', monospace;
+        }
         
-        body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 20px; transition: 0.3s; overflow-x: hidden; }
-        #bio-header { border: 3px double var(--accent); padding: 20px; text-align: center; margin-bottom: 20px; background: var(--card-bg); }
+        body.kawaii-mode { 
+            --bg: #fff0f5; --accent: #ff69b4; --secondary: #87ceeb; --card-bg: #ffffff; --text: #4b0082;
+        }
+
+        * { transition: all 0.3s ease; box-sizing: border-box; }
+        
+        body { background: var(--bg); color: var(--text); font-family: var(--font); padding: 10px; margin: 0; overflow-x: hidden; }
+
+        /* Vibe Switcher */
+        .vibe-btn { 
+            position: fixed; top: 10px; right: 10px; padding: 10px 15px; background: var(--secondary); 
+            color: #000; border: none; font-family: var(--font); cursor: pointer; z-index: 2000;
+            box-shadow: 4px 4px 0px var(--accent); font-weight: bold;
+        }
+
+        #bio-header { border: 3px double var(--accent); padding: 20px; text-align: center; margin: 60px auto 20px; max-width: 900px; background: var(--card-bg); }
         
         .nav-menu { text-align: center; font-size: 1.5rem; margin: 20px 0; }
         .nav-item { cursor: pointer; margin: 0 10px; color: var(--accent); text-decoration: underline; }
-        
-        .vibe-btn { width: auto; padding: 5px 15px; background: var(--secondary); color: #000; border: none; font-family: var(--font); cursor: pointer; margin-bottom: 10px; float: right; }
 
-        /* Scroll Buttons */
-        .side-nav { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        .symbol-btn { 
-            background: var(--card-bg); border: 2px solid var(--accent); color: var(--accent);
-            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; 
-            justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 3px 3px 0 var(--secondary);
+        /* Form Styling */
+        #add-view { max-width: 600px; margin: 20px auto; border: 3px solid var(--secondary); padding: 30px; background: var(--card-bg); position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 10px; color: var(--accent); background: none; border: 1px solid var(--accent); cursor: pointer; padding: 2px 8px; }
+
+        input { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 12px; margin: 8px 0; font-family: var(--font); font-size: 1.2rem; }
+        .save-btn { width: 100%; background: var(--accent); color: #000; padding: 15px; margin-top: 15px; font-family: var(--font); font-size: 1.5rem; cursor: pointer; border: none; font-weight: bold; }
+
+        /* Spacey Grid - Slightly Smaller Cards */
+        #scrapbook-content { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 30px; 
+            padding: 20px; 
+            max-width: 1200px; 
+            margin: auto; 
+        }
+        
+        .project-card { 
+            background: var(--card-bg); border: 3px solid var(--secondary); padding: 20px; 
+            box-shadow: 8px 8px 0px var(--accent); position: relative; cursor: pointer;
+            display: flex; flex-direction: column; gap: 10px;
         }
 
-        /* Entry Form */
-        #add-view { max-width: 500px; margin: auto; border: 3px solid var(--secondary); padding: 25px; background: var(--card-bg); position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 10px; color: var(--accent); background: none; border: 1px solid var(--accent); cursor: pointer; }
+        /* Glitchy Delete */
+        .delete-btn { 
+            position: absolute; top: -10px; right: -10px; background: #ff0000; color: white; 
+            border: 2px solid #fff; width: 30px; height: 30px; cursor: pointer; z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .delete-btn:hover { animation: glitch 0.3s infinite; }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            50% { transform: translate(-2px, 2px); background: #ff5555; }
+            100% { transform: translate(2px, -2px); }
+        }
+
+        .image-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; pointer-events: none; }
+        .card-img { width: 100%; height: 160px; object-fit: cover; border: 1px solid var(--accent); }
+        .card-img.single { grid-column: span 2; height: 280px; }
+
+        /* Lightbox & Symbols */
+        #lightbox {
+            display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); align-items: center; justify-content: center;
+        }
+        #lb-media-container { max-width: 80%; max-height: 70%; border: 3px solid var(--accent); background: #000; }
+        #lb-media-container img, #lb-media-container video, #lb-media-container iframe { max-width: 100%; max-height: 70vh; }
         
-        input { width: 100%; background: #000; border: 1px solid var(--accent); color: var(--accent); padding: 12px; margin: 10px 0; box-sizing: border-box; font-family: var(--font); font-size: 1.1rem; }
-        .save-btn { width: 100%; background: var(--accent); color: #000; padding: 15px; margin-top: 10px; font-family: var(--font); font-size: 1.3rem; cursor: pointer; border: none; font-weight: bold; }
+        .lb-nav { position: absolute; background: var(--bg); border: 2px solid var(--accent); color: var(--accent); font-family: var(--font); font-size: 1.5rem; cursor: pointer; padding: 10px; z-index: 10001; }
+        #lb-close-fs { top: 20px; right: 20px; }
+        #lb-prev { left: 20px; top: 50%; transform: translateY(-50%); }
+        #lb-next { right: 20px; top: 50%; transform: translateY(-50%); }
 
-        /* Project Cards */
-        #scrapbook-content { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .project-card { width: 100%; max-width: 350px; background: var(--card-bg); border: 3px solid var(--secondary); padding: 15px; box-shadow: 8px 8px 0px var(--accent); position: relative; margin-bottom: 15px; }
-        .delete-btn { position: absolute; top: 10px; right: 10px; color: red; background: none; border: none; cursor: pointer; font-size: 1.2rem; }
-        .card-img { width: 100%; height: 250px; object-fit: cover; border-bottom: 2px solid var(--secondary); margin-bottom: 10px; display: block; }
+        /* Scroll Symbols */
+        .side-nav { position: fixed; right: 15px; bottom: 15px; display: flex; flex-direction: column; gap: 8px; z-index: 1000; }
+        .symbol-btn { 
+            background: var(--bg); border: 2px solid var(--accent); color: var(--accent);
+            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; 
+            justify-content: center; cursor: pointer; box-shadow: 3px 3px 0 var(--secondary);
+        }
 
-        /* Custom Retro Popup */
-        #custom-popup { 
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--card-bg); border: 4px solid var(--accent); padding: 30px; 
-            z-index: 2000; text-align: center; box-shadow: 20px 20px 0 var(--secondary);
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            #scrapbook-content { grid-template-columns: 1fr; gap: 20px; }
+            #bio-header { margin-top: 80px; padding: 15px; }
+            #lb-media-container { max-width: 95%; }
+            .lb-nav { font-size: 1rem; padding: 5px; }
         }
 
         .hidden { display: none; }
@@ -58,23 +114,23 @@
 
     <div id="bio-header">
         <h1 style="color:var(--secondary); font-size: 3rem; margin:0;">2026 LOG</h1>
-        <div id="stat-box" style="border: 1px dashed var(--secondary); display: inline-block; padding: 5px 10px;">PROJECTS: <span id="count-num">0</span></div>
+        <div style="border: 1px dashed var(--secondary); display: inline-block; padding: 5px 15px;">PROJECTS: <span id="count-num">0</span></div>
     </div>
 
     <div class="nav-menu">
         <span class="nav-item" onclick="showView('journal')">✦ VIEW JOURNAL</span> | 
-        <span class="nav-item" onclick="showView('add')">✦ ADD NEW ENTRY</span>
+        <span class="nav-item" onclick="showView('add')">✦ ADD NEW</span>
     </div>
 
     <div id="add-view" class="hidden">
         <button class="close-btn" onclick="showView('journal')">[X]</button>
         <h2 style="color:var(--accent)">> UPLOAD_MEMORY</h2>
         <input type="text" id="name" placeholder="Project Name">
-        <input type="text" id="imgUrl" placeholder="Photo Link (Paste URL here)">
+        <input type="text" id="imgUrl" placeholder="Image Links (comma separated)">
+        <input type="text" id="videoUrl" placeholder="Video Link">
+        <input type="text" id="tutorial" placeholder="Tutorial Link">
         <input type="text" id="hook" placeholder="Hook Size">
         <input type="text" id="yarn" placeholder="Yarn Brand">
-        <input type="text" id="stitches" placeholder="Stitches Used">
-        <input type="url" id="tutorial" placeholder="Tutorial Link">
         <button class="save-btn" id="save-btn" onclick="saveToFirebase()">SAVE TO DATABASE 💾</button>
     </div>
 
@@ -87,10 +143,11 @@
         <div class="symbol-btn" onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})">▼</div>
     </div>
 
-    <div id="custom-popup">
-        <h2 style="color:var(--accent)">✦ SUCCESS ✦</h2>
-        <p>MEMORY SAVED TO SATELLITE</p>
-        <button class="save-btn" onclick="closePopup()">OK</button>
+    <div id="lightbox">
+        <button class="lb-nav" id="lb-close-fs" onclick="closeLightbox()">[X] CLOSE</button>
+        <button class="lb-nav" id="lb-prev" onclick="changeMedia(-1)">PREV ◀</button>
+        <div id="lb-media-container"></div>
+        <button class="lb-nav" id="lb-next" onclick="changeMedia(1)">NEXT ▶</button>
     </div>
 
     <script>
@@ -106,6 +163,9 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        let currentProjectMedia = [];
+        let currentIndex = 0;
+
         function showView(v) {
             document.getElementById('add-view').classList.toggle('hidden', v !== 'add');
             document.getElementById('journal-view').classList.toggle('hidden', v !== 'journal');
@@ -113,41 +173,19 @@
 
         async function saveToFirebase() {
             const btn = document.getElementById('save-btn');
-            btn.innerText = "SIGNALING...";
-            btn.disabled = true;
-
-            try {
-                await db.collection("projects").add({
-                    name: document.getElementById('name').value || "Unnamed Project",
-                    img: document.getElementById('imgUrl').value || "",
-                    hook: document.getElementById('hook').value || "N/A",
-                    yarn: document.getElementById('yarn').value || "N/A",
-                    stitches: document.getElementById('stitches').value || "N/A",
-                    tutorial: document.getElementById('tutorial').value || "",
-                    date: new Date().toISOString()
-                });
-
-                document.getElementById('custom-popup').style.display = 'block';
-                btn.innerText = "SAVE TO DATABASE 💾";
-                btn.disabled = false;
-                
-                // Clear fields
-                ['name', 'imgUrl', 'hook', 'yarn', 'stitches', 'tutorial'].forEach(id => document.getElementById(id).value = '');
-            } catch (e) {
-                alert("ERROR: Connection Lost!");
-                btn.disabled = false;
-            }
-        }
-
-        function closePopup() {
-            document.getElementById('custom-popup').style.display = 'none';
+            btn.innerText = "UPLOADING...";
+            await db.collection("projects").add({
+                name: document.getElementById('name').value || "New Project",
+                img: document.getElementById('imgUrl').value,
+                video: document.getElementById('videoUrl').value,
+                tutorial: document.getElementById('tutorial').value,
+                hook: document.getElementById('hook').value,
+                yarn: document.getElementById('yarn').value,
+                date: new Date().toISOString()
+            });
+            alert("✨ SUCCESS: MEMORY SAVED ✨"); // Success Pop
+            btn.innerText = "SAVE TO DATABASE 💾";
             showView('journal');
-        }
-
-        async function deleteProject(id) {
-            if(confirm("Permanently delete this memory?")) {
-                await db.collection("projects").doc(id).delete();
-            }
         }
 
         function loadData() {
@@ -157,19 +195,57 @@
                 document.getElementById('count-num').innerText = snap.size;
                 snap.forEach(doc => {
                     const p = doc.data();
-                    cont.innerHTML += `
-                        <div class="project-card">
-                            <button class="delete-btn" onclick="deleteProject('${doc.id}')">✖</button>
-                            ${p.img ? `<img src="${p.img}" class="card-img" onerror="this.style.display='none'">` : ''}
-                            <h2 style="color:var(--accent); margin-top:0;">${p.name}</h2>
-                            <p><b>HOOK:</b> ${p.hook}</p>
-                            <p><b>YARN:</b> ${p.yarn}</p>
-                            <p><b>STITCHES:</b> ${p.stitches}</p>
-                            ${p.tutorial ? `<a href="${p.tutorial}" target="_blank" style="color:var(--secondary)">[VIEW_TUTORIAL]</a>` : ''}
-                        </div>`;
+                    const imgs = p.img ? p.img.split(',').map(s => s.trim()) : [];
+                    const mediaArray = [...imgs];
+                    if(p.video) mediaArray.push(p.video);
+
+                    const card = document.createElement('div');
+                    card.className = 'project-card';
+                    card.innerHTML = `
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteProject('${doc.id}')">✖</button>
+                        <div class="image-gallery">
+                            ${mediaArray.slice(0, 4).map((url, i) => `<img src="${url}" class="card-img ${mediaArray.length === 1 ? 'single' : ''}">`).join('')}
+                        </div>
+                        <h2 style="color:var(--accent); margin: 5px 0;">${p.name}</h2>
+                        <p><b>HOOK:</b> ${p.hook} | <b>YARN:</b> ${p.yarn}</p>
+                        ${p.tutorial ? `<a href="${p.tutorial}" target="_blank" style="color:var(--secondary); text-decoration:none;" onclick="event.stopPropagation()">[✦ VIEW TUTORIAL]</a>` : ''}
+                    `;
+                    card.onclick = () => openLightbox(mediaArray, 0);
+                    cont.appendChild(card);
                 });
             });
         }
+
+        async function deleteProject(id) {
+            if(confirm("Delete this memory?")) await db.collection("projects").doc(id).delete();
+        }
+
+        function openLightbox(media, index) {
+            currentProjectMedia = media;
+            currentIndex = index;
+            document.getElementById('lightbox').style.display = 'flex';
+            renderMedia();
+        }
+
+        function renderMedia() {
+            const container = document.getElementById('lb-media-container');
+            const url = currentProjectMedia[currentIndex];
+            container.innerHTML = '';
+            if(url.includes('youtube') || url.includes('youtu.be')) {
+                const id = url.split('v=')[1] || url.split('/').pop().split('?')[0];
+                container.innerHTML = `<iframe width="560" height="315" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe>`;
+            } else {
+                container.innerHTML = `<img src="${url}">`;
+            }
+        }
+
+        function changeMedia(step) {
+            currentIndex = (currentIndex + step + currentProjectMedia.length) % currentProjectMedia.length;
+            renderMedia();
+        }
+
+        function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+
         loadData();
     </script>
 </body>
